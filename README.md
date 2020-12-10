@@ -2,7 +2,7 @@
 
 We only require flask and flask-sijax 
 
-![alt text](screen.png)
+![alt text](screen.PNG)
 
 ## Running Locally
 
