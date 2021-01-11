@@ -21,10 +21,10 @@ flask_sijax.Sijax(app)
 
 
 # you can set key as config
-app.config['GOOGLEMAPS_KEY'] = "AIzaSyCKQhEo1ZdwbMOoNY46HmZmQhMg9QMiBPI"
+app.config['GOOGLEMAPS_KEY'] = "AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc"
 
 # you can also pass key here
-GoogleMaps(app, key="AIzaSyCKQhEo1ZdwbMOoNY46HmZmQhMg9QMiBPI")
+GoogleMaps(app, key="AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc")
 
 # NOTE: this example is using a form to get the apikey
 
