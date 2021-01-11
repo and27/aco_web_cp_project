@@ -24,10 +24,7 @@ flask_sijax.Sijax(app)
 app.config['GOOGLEMAPS_KEY'] = "AIzaSyCKQhEo1ZdwbMOoNY46HmZmQhMg9QMiBPI"
 
 # you can also pass key here
-GoogleMaps(
-    app,
-     key="AIzaSyCKQhEo1ZdwbMOoNY46HmZmQhMg9QMiBPI"
-)
+GoogleMaps(app, key="AIzaSyCKQhEo1ZdwbMOoNY46HmZmQhMg9QMiBPI")
 
 # NOTE: this example is using a form to get the apikey
 
@@ -182,7 +179,37 @@ def map_created_in_view():
 
 @app.route('/')
 def main_page():
-    return render_template("ardu.html")
+   
+
+    polyline = {
+        "stroke_color": "#0AB0DE",
+        "stroke_opacity": 1.0,
+        "stroke_weight": 3,
+        "path": [
+            {"lat": -1.461841234552677, "lng": -78.46805831612365},
+            {"lat": -1.5, "lng": -78.5},
+        ],
+    }
+    path1 = [
+        (-1.51, -78.51),
+        (-1.52, -78.52),
+        (-1.53, -78.53),
+        (-1.54, -78.54),
+    ]
+    gmap = Map(
+        identifier="gmap",
+        varname="gmap",
+        lat=-1.461841234552677, 
+        lng=-78.46805831612365,
+        markers={
+            icons.dots.green: [(-1.461841234552677, -78.46805831612365, "VERDE")],
+            icons.dots.blue: [(-1.5, -78.5, "AZUL")],
+        },
+        style="height:1000px;width:1000px;margin:0;",
+        polylines=[polyline],#, path1],
+    )
+    
+    return render_template("ardu.html", gmap=gmap)
 
 @flask_sijax.route(app, '/<int:req>')
 def ardu(req):
