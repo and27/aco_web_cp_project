@@ -114,16 +114,16 @@ class _Ant(object):
 
 
 def calc_distancia(city1, city2):
-    coords_1 = (city1['x'], city1['y'])
-    coords_2 = (city2['x'], city2['y'])
+    coords_1 = (city1['lat'], city1['lng'])
+    coords_2 = (city2['lat'], city2['lng'])
     return geodesic(coords_1, coords_2).km
 
 
 cities = [
-    {'index':0, 'x':-2.1833, 'y':-79.8833, 'name':'Quito'},
-    {'index':1, 'x':-0.2186, 'y':-78.5097, 'name':'Guayaquil'},
-    {'index':2, 'x':-1.2417, 'y':-78.6197, 'name':'Ambato'},
-    {'index':3, 'x':44.000000, 'y':-72.699997, 'name': 'Vermont'}
+    {'index':0, 'lat':-2.1833, 'lng':-79.8833, 'name':'Quito'},
+    {'index':1, 'lat':-0.2186, 'lng':-78.5097, 'name':'Guayaquil'},
+    {'index':2, 'lat':-1.2417, 'lng':-78.6197, 'name':'Ambato'},
+    {'index':3, 'lat':44.000000, 'lng':-72.699997, 'name': 'Vermont'}
 ]
 
 matriz_adjacencia = []
@@ -143,44 +143,9 @@ def index():
     print(caminho)
     return render_template('index.html')
 
-@app.route('/mapa')
-def map_created_in_view():
-
-    polyline = {
-        "stroke_color": "#0AB0DE",
-        "stroke_opacity": 1.0,
-        "stroke_weight": 3,
-        "path": [
-            {"lat": -1.461841234552677, "lng": -78.46805831612365},
-            {"lat": -1.5, "lng": -78.5},
-        ],
-    }
-    path1 = [
-        (-1.51, -78.51),
-        (-1.52, -78.52),
-        (-1.53, -78.53),
-        (-1.54, -78.54),
-    ]
-    gmap = Map(
-        identifier="gmap",
-        varname="gmap",
-        lat=-1.461841234552677, 
-        lng=-78.46805831612365,
-        markers={
-            icons.dots.green: [(-1.461841234552677, -78.46805831612365, "VERDE")],
-            icons.dots.blue: [(-1.5, -78.5, "AZUL")],
-        },
-        style="height:1000px;width:1000px;margin:0;",
-        polylines=[polyline],#, path1],
-    )
-
-    return render_template("simple.html", gmap=gmap)
-
 
 @app.route('/')
 def main_page():
-   
-
     polyline = {
         "stroke_color": "#0AB0DE",
         "stroke_opacity": 1.0,
@@ -196,15 +161,17 @@ def main_page():
         (-1.53, -78.53),
         (-1.54, -78.54),
     ]
+    markers=[]
+    for i in range(len(cities)):
+        markers.append({'lat':cities[i]['lat'], 'lng':cities[i]['lng'], 'infobox':cities[i]['name']})
+    print(markers[2])  
     gmap = Map(
+        zoom=8,
         identifier="gmap",
         varname="gmap",
-        lat=-1.461841234552677, 
-        lng=-78.46805831612365,
-        markers={
-            icons.dots.green: [(-1.461841234552677, -78.46805831612365, "VERDE")],
-            icons.dots.blue: [(-1.5, -78.5, "AZUL")],
-        },
+        lat=cities[0]['lat'], 
+        lng=cities[0]['lng'],
+        markers = markers,
         style="height:1000px;width:1000px;margin:0;",
         polylines=[polyline],#, path1],
     )
