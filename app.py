@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, request, jsonify
+import json
 import flask_sijax 
 import os
 import time
@@ -19,10 +20,10 @@ path = os.path.join('.', os.path.dirname(__file__), 'static/js/sijax/')
 app.config['SIJAX_STATIC_PATH'] = path
 flask_sijax.Sijax(app)
 
-
 # you can set key as config
 app.config['GOOGLEMAPS_KEY'] = "AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc"
-
+cities_js = []
+global optimum_route 
 # you can also pass key here
 GoogleMaps(app, key="AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc")
 
@@ -126,6 +127,10 @@ cities = [
     {'index':3, 'lat':44.000000, 'lng':-72.699997, 'name': 'Vermont'}
 ]
 
+
+for ci in cities:
+    cities_js.append(json.dumps(ci))
+
 matriz_adjacencia = []
 rank = len(cities)
 # Lets calculate adjacency matrix
@@ -139,13 +144,31 @@ for i in range(rank):
 def index():
     aco = ACO(cont_formiga=10, generations=1, alfa=1.0, beta=10.0, ro=0.5, Q=10)
     grafo = Grafo(matriz_adjacencia, rank)
-    caminho, custo = aco.resolve(grafo)
-    print(caminho)
+    global optimum_route
+    optimum_route, custo = aco.resolve(grafo)
+    print(optimum_route)
     return render_template('index.html')
 
 
-@app.route('/')
+
+@app.route('/', methods=["GET", "POST"])
 def main_page():
+
+    # Get the optimum path 
+    aco = ACO(cont_formiga=10, generations=1, alfa=1.0, beta=10.0, ro=0.5, Q=10)
+    grafo = Grafo(matriz_adjacencia, rank)
+    optimum_route, custo = aco.resolve(grafo)
+    print(optimum_route)
+    # ------------------------- #
+
+    #The request can optionally contain the lat, lng or req(to wake up the server)
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+    requ = request.args.get('req')
+    if requ != None:
+        requ = int(requ)
+ 
+    #Draw lines in google map
     polyline = {
         "stroke_color": "#0AB0DE",
         "stroke_opacity": 1.0,
@@ -161,47 +184,47 @@ def main_page():
         (-1.53, -78.53),
         (-1.54, -78.54),
     ]
+
     markers=[]
     for i in range(len(cities)):
         markers.append({'lat':cities[i]['lat'], 'lng':cities[i]['lng'], 'infobox':cities[i]['name']})
-    print(markers[2])  
+    
     gmap = Map(
-        zoom=8,
+        zoom=7,
         identifier="gmap",
         varname="gmap",
-        lat=cities[0]['lat'], 
-        lng=cities[0]['lng'],
+        lat=cities[2]['lat'], 
+        lng=cities[2]['lng'],
         markers = markers,
-        style="height:1000px;width:1000px;margin:0;",
+        style="height:100vh;margin:0;",
         polylines=[polyline],#, path1],
     )
-    
-    return render_template("ardu.html", gmap=gmap)
 
-@flask_sijax.route(app, '/<int:req>')
-def ardu(req):
-    if req == 100:
+    if (lat != None) & (lng != None):
+        cities_js.append(json.dumps({'index':len(cities), 'lat':float(lat), 'lng':float(lng), 'name':'default'}))
+        return "0"
+
+    if requ == 100:
         with open("test.txt", 'w') as f:
                 f.write(str(100))
                 f.close()
                 time.sleep(1)
-    elif req == 0:
-        with open("test.txt", 'w') as f:
-                f.write(str(0))
-                f.close()
+        return "0"
 
     content = None
+
+    #Ajax function to respond when the server gets an event 
     def retrieve_data(obj_response):
         with open("test.txt", "r") as f:
             content = f.read()
             if int(content) == 100:
-                obj_response.html("#element", "We have <br>a new node:")
+                obj_response.html("#element", "New node <br> detected")
                 obj_response.css("#img_element", "display","block")
                 obj_response.script("$('#exampleModal').modal('show');")
-                obj_response.script("routes()")                
+                obj_response.script("routes()")
+                obj_response.call("initMap", [cities_js])
             else:
                 obj_response.script("$('#exampleModal').modal('hide')")
-
 
         f.close()
         with open("test.txt", 'w') as f:
@@ -209,17 +232,15 @@ def ardu(req):
                 f.close()
 
     if g.sijax.is_sijax_request:
-        g.sijax.register_callback('ardu', retrieve_data) 
+        g.sijax.register_callback('retrieve_data', retrieve_data) 
         return g.sijax.process_request()
-          
-    return render_template("ardu.html")
 
+  
+    return render_template("ardu.html", gmap=gmap, cities=cities)
 
 @app.route('/about')
 def about():
     return render_template('about.html')
 
-
-
 if __name__ == '__main__':
-    app.run(port=5050)#,debug=DEVELOPMENT_ENV, host="0.0.0.0")
+    app.run(port=5050, host="0.0.0.0")#,debug=DEVELOPMENT_ENV, host="0.0.0.0")
