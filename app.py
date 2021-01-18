@@ -3,7 +3,7 @@
 
 from flask import Flask, render_template, g, request, jsonify
 import json
-import flask_sijax 
+import flask_sijax
 import os
 import time
 import math
@@ -23,7 +23,7 @@ flask_sijax.Sijax(app)
 # you can set key as config
 app.config['GOOGLEMAPS_KEY'] = "AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc"
 cities_js = []
-global optimum_route 
+global optimum_route
 # you can also pass key here
 GoogleMaps(app, key="AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc")
 
@@ -124,7 +124,7 @@ cities = [
     {'index':0, 'lat':-2.1833, 'lng':-79.8833, 'name':'Quito'},
     {'index':1, 'lat':-0.2186, 'lng':-78.5097, 'name':'Guayaquil'},
     {'index':2, 'lat':-1.2417, 'lng':-78.6197, 'name':'Ambato'},
-    {'index':3, 'lat':44.000000, 'lng':-72.699997, 'name': 'Vermont'}
+    {'index':3, 'lat':-2.90055, 'lng':-79.00453, 'name': 'Cuenca'}
 ]
 
 
@@ -134,7 +134,7 @@ for ci in cities:
 matriz_adjacencia = []
 rank = len(cities)
 # Lets calculate adjacency matrix
-for i in range(rank):  
+for i in range(rank):
     linha = []
     for j in range(rank):
         linha.append(calc_distancia(cities[i], cities[j]))
@@ -154,7 +154,7 @@ def index():
 @app.route('/', methods=["GET", "POST"])
 def main_page():
 
-    # Get the optimum path 
+    # Get the optimum path
     aco = ACO(cont_formiga=10, generations=1, alfa=1.0, beta=10.0, ro=0.5, Q=10)
     grafo = Grafo(matriz_adjacencia, rank)
     optimum_route, custo = aco.resolve(grafo)
@@ -167,17 +167,25 @@ def main_page():
     requ = request.args.get('req')
     if requ != None:
         requ = int(requ)
- 
+
+        #Hello I am <b style='color:blue;'>BLUE</b>!"
+
+    defined="<b style='color:black;'>The defined route is: "
+    for i in optimum_route:
+        defined=defined+cities[i]['name']+" "
+    defined=defined+"</b>"
+
     #Draw lines in google map
     polyline = {
         "stroke_color": "#0AB0DE",
         "stroke_opacity": 1.0,
         "stroke_weight": 3,
-        "path": [
-            {"lat": -1.461841234552677, "lng": -78.46805831612365},
-            {"lat": -1.5, "lng": -78.5},
-        ],
+        "path": [{"lat": cities[i]['lat'], "lng": cities[i]['lng']} for i in optimum_route],
+        "infobox": defined
     }
+
+    print(polyline['path'])
+
     path1 = [
         (-1.51, -78.51),
         (-1.52, -78.52),
@@ -188,12 +196,12 @@ def main_page():
     markers=[]
     for i in range(len(cities)):
         markers.append({'lat':cities[i]['lat'], 'lng':cities[i]['lng'], 'infobox':cities[i]['name']})
-    
+
     gmap = Map(
         zoom=7,
         identifier="gmap",
         varname="gmap",
-        lat=cities[2]['lat'], 
+        lat=cities[2]['lat'],
         lng=cities[2]['lng'],
         markers = markers,
         style="height:100vh;margin:0;",
@@ -213,7 +221,7 @@ def main_page():
 
     content = None
 
-    #Ajax function to respond when the server gets an event 
+    #Ajax function to respond when the server gets an event
     def retrieve_data(obj_response):
         with open("test.txt", "r") as f:
             content = f.read()
@@ -232,10 +240,10 @@ def main_page():
                 f.close()
 
     if g.sijax.is_sijax_request:
-        g.sijax.register_callback('retrieve_data', retrieve_data) 
+        g.sijax.register_callback('retrieve_data', retrieve_data)
         return g.sijax.process_request()
 
-  
+
     return render_template("ardu.html", gmap=gmap, cities=cities)
 
 @app.route('/about')
