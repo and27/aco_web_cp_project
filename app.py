@@ -24,6 +24,7 @@ flask_sijax.Sijax(app)
 # you can set key as config
 app.config['GOOGLEMAPS_KEY'] = "AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc"
 cities_js = []
+start_phase = 0
 global optimum_route
 # you can also pass key here
 GoogleMaps(app, key="AIzaSyDVKeBLvxyowU6N9aeqOnytCCoII44Y4Gc")
@@ -122,10 +123,10 @@ def calc_distancia(city1, city2):
 
 
 cities = [
-    {'index':0, 'lat':-2.1833, 'lng':-79.8833, 'name':'Quito'},
-    {'index':1, 'lat':-0.2186, 'lng':-78.5097, 'name':'Guayaquil'},
-    {'index':2, 'lat':-1.2417, 'lng':-78.6197, 'name':'Ambato'},
-    {'index':3, 'lat':-2.90055, 'lng':-79.00453, 'name': 'Cuenca'}
+   # {'index':0, 'lat':-2.1833, 'lng':-79.8833, 'name':'Quito'},
+    {'index':0, 'lat':-0.2186, 'lng':-78.5097, 'name':'Guayaquil'}
+    #{'index':2, 'lat':-1.2417, 'lng':-78.6197, 'name':'Ambato'},
+    #{'index':3, 'lat':-2.90055, 'lng':-79.00453, 'name': 'Cuenca'}
 ]
 
 
@@ -202,8 +203,8 @@ def main_page():
         zoom=7,
         identifier="gmap",
         varname="gmap",
-        lat=cities[2]['lat'],
-        lng=cities[2]['lng'],
+        lat=cities[0]['lat'],
+        lng=cities[0]['lng'],
         markers = markers,
         style="height:100vh;margin:0;",
         polylines=[polyline],#, path1],
@@ -211,6 +212,7 @@ def main_page():
 
     if (lat != None) & (lng != None):
         cities_js.append(json.dumps({'index':len(cities), 'lat':float(lat), 'lng':float(lng), 'name':'default'}))
+        cities.append({'index':len(cities), 'lat':float(lat), 'lng':float(lng), 'name':'Default'})
         return "0"
 
     if requ == 100:
@@ -224,6 +226,7 @@ def main_page():
 
     #Ajax function to respond when the server gets an event
     def retrieve_data(obj_response):
+        global start_phase
         with open("test.txt", "r") as f:
             content = f.read()
             if int(content) == 100:
@@ -234,6 +237,9 @@ def main_page():
                 obj_response.call("initMap", [cities_js])
             else:
                 obj_response.script("$('#exampleModal').modal('hide')")
+                if start_phase == 0:
+                    obj_response.call("initMap", [cities_js])
+                    start_phase = 1
 
         f.close()
         with open("test.txt", 'w') as f:
@@ -243,7 +249,7 @@ def main_page():
     if g.sijax.is_sijax_request:
         g.sijax.register_callback('retrieve_data', retrieve_data)
         return g.sijax.process_request()
-    return render_template("ardu.html", gmap=gmap, cities=cities, ex_time=ex_time)
+    return render_template("ardu.html", gmap=gmap, cities=cities, cities_js=cities_js, ex_time=ex_time)
 
 @app.route('/about')
 def about():

@@ -58,8 +58,9 @@
     
     }
 
-
-    var polylineOptions = {path:destinations};
+    var polylineOptions = {path:destinations,
+                           strokeColor: '#0AB0DE',
+                           strokeWeight:3};
     var polyline = new google.maps.Polyline(polylineOptions);
     polyline.setMap(map);
 
