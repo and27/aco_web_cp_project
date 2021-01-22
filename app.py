@@ -12,6 +12,7 @@ from  geopy.distance import geodesic
 from flask_googlemaps import GoogleMaps, Map, icons
 from dynaconf import FlaskDynaconf
 
+
 DEVELOPMENT_ENV  = True
 
 app = Flask(__name__)
@@ -142,11 +143,14 @@ for i in range(rank):
 
 @app.route('/aco')
 def index():
+    
     aco = ACO(cont_formiga=10, generations=1, alfa=1.0, beta=10.0, ro=0.5, Q=10)
     grafo = Grafo(matriz_adjacencia, rank)
     global optimum_route
     optimum_route, custo = aco.resolve(grafo)
     print(optimum_route)
+    
+  
     return render_template('index.html')
 
 
@@ -154,11 +158,14 @@ def index():
 @app.route('/', methods=["GET", "POST"])
 def main_page():
 
+    start = time.time()*5
     # Get the optimum path
     aco = ACO(cont_formiga=10, generations=1, alfa=1.0, beta=10.0, ro=0.5, Q=10)
     grafo = Grafo(matriz_adjacencia, rank)
     optimum_route, custo = aco.resolve(grafo)
     print(optimum_route)
+    end = time.time()*5
+    ex_time = end - start
     # ------------------------- #
 
     #The request can optionally contain the lat, lng or req(to wake up the server)
@@ -186,13 +193,7 @@ def main_page():
 
     print(polyline['path'])
 
-    path1 = [
-        (-1.51, -78.51),
-        (-1.52, -78.52),
-        (-1.53, -78.53),
-        (-1.54, -78.54),
-    ]
-
+   
     markers=[]
     for i in range(len(cities)):
         markers.append({'lat':cities[i]['lat'], 'lng':cities[i]['lng'], 'infobox':cities[i]['name']})
@@ -242,9 +243,7 @@ def main_page():
     if g.sijax.is_sijax_request:
         g.sijax.register_callback('retrieve_data', retrieve_data)
         return g.sijax.process_request()
-
-
-    return render_template("ardu.html", gmap=gmap, cities=cities)
+    return render_template("ardu.html", gmap=gmap, cities=cities, ex_time=ex_time)
 
 @app.route('/about')
 def about():
